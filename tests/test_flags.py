@@ -69,9 +69,9 @@ def run(monkeypatch, *, keep_gen, tilt, keep_pose, renderer=None, panel=None, ju
     return out, calls, r
 
 
-def test_flags_off_reproduce_upstream_behaviour(monkeypatch):
+def test_flags_off_reproduce_default_behaviour(monkeypatch):
     out, calls, r = run(monkeypatch, keep_gen=False, tilt=False, keep_pose=False)
-    assert out is not None and "size0.y < 0.5" in out  # upstream final() heuristic wrapper
+    assert out is not None and "size0.y < 0.5" in out  # default final() heuristic wrapper
     assert all("Keep the pose" not in t for _, _, t in calls.log)
 
 

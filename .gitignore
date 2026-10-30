@@ -5,3 +5,4 @@ venv/
 *.egg-info/
 /private/
 /experiments/
+.pytest_cache/
