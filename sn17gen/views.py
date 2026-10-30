@@ -68,5 +68,10 @@ def front_sheet(render, source: str) -> bytes:
     return _sheet(render, source, FRONT, FRONT_PX)
 
 
+def judge_sheet(render, source: str) -> bytes:
+    """The judge's four front views at refine resolution (512 px tiles)."""
+    return _sheet(render, source, FRONT, VIEW_PX)
+
+
 def data_url(png: bytes) -> str:
     return "data:image/png;base64," + base64.b64encode(png).decode("ascii")

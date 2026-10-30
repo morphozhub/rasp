@@ -68,3 +68,17 @@ Current module:
 ```js
 %s
 ```"""
+
+COLOUR_RULES_TEXT = """
+Colour and material rules: read the actual colours from the photo and use them as hex values; keep the photo's saturation; white surfaces no brighter than #e6e6e6 and black no darker than #1c1c1c; metalness at most 0.6 unless the surface is bare polished metal (silver, chrome, steel read as light grey base colour with metalness 0.8-1.0 and low roughness, never black); glass and clear plastic via opacity 0.3-0.6 with a tint, no transmission; DataTexture at most 256x256 and at most six textures; write negative powers as -(a ** b)."""
+
+REFINE_USER_JUDGE = """REFINEMENT STEP: one chance to improve your module before it is judged. Attached: (1) the reference photo, (2) a 2x2 sheet of renders of your current module made from the four front angles the judge compares with the photo first: top-left 30 degrees right of front, top-right 30 degrees left of front, bottom-left slightly from below, bottom-right from above. Every visible difference costs points.
+1. Compare the renders with the photo and list the concrete discrepancies, most damaging first: missing or extra parts (count every repeated part: legs, wheels, buttons, slats, toppings, petals, spokes), overall proportions and the sizes and positions of the parts, surface detail and texture (patterns, engravings, seams, text), colours and materials (hue, saturation, brightness, gloss, transparency), and framing (the object alone, no floor or backdrop).
+2. Keep the pose: keep the module's current orientation (lying, standing, leaning or diagonal; tilt and turn) and the side that faces the front cameras, unless the renders clearly contradict the photo (the object stands upright in the renders but lies flat in the photo, or the renders show its back, side or underside where the photo shows its front). A different camera angle alone is not a pose error.
+3. Then write the COMPLETE corrected module that fixes these discrepancies under the same contract. Keep every part that already matches the photo; do not simplify or drop correct detail; if nothing needs fixing, return the module unchanged.
+Reply format: first the discrepancy list (plain text, at most 12 short bullets, no code), then exactly one ```javascript fenced code block with the complete module.
+
+Current module:
+```js
+%s
+```"""

@@ -10,3 +10,13 @@ PHOTO_TILT = True
 
 # Refinement prompt guard: keep the module's pose unless the renders clearly contradict the photo.
 KEEP_POSE = True
+
+# Refinement looks at the organizer judge's exact four front views (front_left 30/0, front_right
+# 330/0, front_below 0/15, front_above 0/-30) and must list discrepancies before the module.
+JUDGE_REFINE = True
+
+# Numeric colour/material rules appended to the generation system prompt.
+COLOUR_RULES = True
+
+# First generation of every chain on gpt-6-astra (reasoning high) instead of gpt-6.1-sol medium.
+ASTRA_GEN = False

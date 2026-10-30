@@ -43,7 +43,8 @@ def _fresh_ids(witness) -> bool:
 def _call(witness, ledger: Ledger, kind: str, text: str, pngs: list[bytes], *, model: str | None = None,
           effort: str | None = None, instructions: str | None = None) -> str | None:
     model, effort = model or MODEL, effort or EFFORT
-    instructions = prompts.GEN_SYSTEM if instructions is None else instructions
+    if instructions is None:
+        instructions = prompts.GEN_SYSTEM + (prompts.COLOUR_RULES_TEXT if config.COLOUR_RULES else "")
     content = [{"type": "input_text", "text": text}]
     content += [{"type": "input_image", "image_url": views.data_url(p), "detail": "high"} for p in pngs]
     ids = {"request_id": ledger.calls} if ledger.calls and _fresh_ids(witness) else {}
@@ -76,6 +77,8 @@ def _provider_failure(exc) -> bool:
 
 
 def _ask(witness, ledger: Ledger, kind: str, text: str, pngs: list[bytes], effort: str | None = None) -> str | None:
+    if kind == "gen" and config.ASTRA_GEN:
+        return extract(_call(witness, ledger, kind, text, pngs, model=PANEL_MODEL, effort="high"))
     return extract(_call(witness, ledger, kind, text, pngs, effort=effort))
 
 
@@ -87,7 +90,7 @@ def _sheet_or_error(renderer, source: str, sheets: dict) -> tuple[bytes | None, 
     if source in sheets:
         return sheets[source], None
     try:
-        png = views.sheet(renderer.render, source)
+        png = (views.judge_sheet if config.JUDGE_REFINE else views.sheet)(renderer.render, source)
     except Exception as exc:
         if type(exc).__name__ != "RenderRejected":
             raise
@@ -133,7 +136,8 @@ def _chain(witness, renderer, ledger: Ledger, ref: bytes) -> str | None:
                 best = prior
                 js = _ask(witness, ledger, "repair", prompts.REPAIR_USER % (rejected, js), [ref], later)
                 continue
-            refine_text = prompts.REFINE_USER_KEEP_POSE if config.KEEP_POSE else prompts.REFINE_USER
+            refine_text = (prompts.REFINE_USER_JUDGE if config.JUDGE_REFINE
+                           else prompts.REFINE_USER_KEEP_POSE if config.KEEP_POSE else prompts.REFINE_USER)
             js = _ask(witness, ledger, "refine", refine_text % js, [ref, sheet], later)
     return best, prior
 
