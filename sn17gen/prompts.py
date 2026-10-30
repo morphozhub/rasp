@@ -58,3 +58,13 @@ Penalty 0-10 per candidate:
 10 = Completely wrong object
 
 Output JSON only: {"penalties": [<one number per candidate, in order>]}"""
+
+REFINE_USER_KEEP_POSE = """Attached: (1) the reference photo, (2) a 2x2 sheet of renders of your current module on white: top-left from 30 degrees right of front, top-right from 30 degrees left of front, bottom-left from above the front, bottom-right the right side.
+Compare them with the photo. List to yourself the largest visible differences (shape, proportions, colors, missing or wrong parts, surface detail), then fix them.
+Keep the pose: keep the module's current orientation (lying, standing, leaning or diagonal; tilt and turn) and the side that faces the front cameras, unless the renders clearly contradict the photo (the object stands upright in the renders but lies flat in the photo, or the renders show its back, side or underside where the photo shows its front). The photo was taken from one arbitrary viewpoint and the renders from fixed angles, so a different camera angle alone is not a pose error: never turn or tilt the object only to make one render look more like the photo.
+Return the complete improved module (only JavaScript).
+
+Current module:
+```js
+%s
+```"""

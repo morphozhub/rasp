@@ -8,9 +8,9 @@ import time
 
 from PIL import Image
 
-from . import prompts, views
+from . import config, orient, prompts, views
 from .budget import CALL_LIMIT, Ledger
-from .jsutil import extract, final, wrap
+from .jsutil import extract, final, tilted, wrap
 
 MODEL = "gpt-6.1-sol"
 EFFORT = "medium"
@@ -133,8 +133,9 @@ def _chain(witness, renderer, ledger: Ledger, ref: bytes) -> str | None:
                 best = prior
                 js = _ask(witness, ledger, "repair", prompts.REPAIR_USER % (rejected, js), [ref], later)
                 continue
-            js = _ask(witness, ledger, "refine", prompts.REFINE_USER % js, [ref, sheet], later)
-    return best
+            refine_text = prompts.REFINE_USER_KEEP_POSE if config.KEEP_POSE else prompts.REFINE_USER
+            js = _ask(witness, ledger, "refine", refine_text % js, [ref, sheet], later)
+    return best, prior
 
 
 def _panel(witness, renderer, ledger: Ledger, ref: bytes, modules: list[str]) -> str:
@@ -151,9 +152,45 @@ def _panel(witness, renderer, ledger: Ledger, ref: bytes, modules: list[str]) ->
     return modules[min(range(len(modules)), key=lambda i: (pens[i], i))]
 
 
+def _finalize(renderer, image: bytes, best: str) -> str | None:
+    """Final wrapper: photo-aware tilt for flat objects (renders only), else the fixed heuristic."""
+    if not config.PHOTO_TILT:
+        return final(best)
+    plain = wrap(best)
+    if plain is None:
+        return None
+    try:
+        front = renderer.render(plain, views.view_options(30, 0))
+        if not orient.needs_upright(image, front):
+            return final(best)
+        fronts = {}
+        for tilt in orient.TILTS:
+            candidate = tilted(best, tilt)
+            if candidate is None:
+                continue
+            try:
+                fronts[tilt] = renderer.render(candidate, views.view_options(30, 0))
+            except Exception as exc:
+                if type(exc).__name__ != "RenderRejected":
+                    raise
+        if not fronts:
+            return final(best)
+        return tilted(best, orient.best_tilt(image, fronts))
+    except Exception as exc:
+        if type(exc).__name__ != "RenderRejected":
+            raise
+        return final(best)
+
+
 def run(image: bytes, seed: int, witness, renderer) -> str | None:
     ref = _png(image)
     ledger = Ledger(call_cap=CALL_LIMIT)
-    found = [js for js in (_chain(witness, renderer, ledger, ref) for _ in range(CHAINS)) if js is not None]
+    found = []
+    for _ in range(CHAINS):
+        best, prior = _chain(witness, renderer, ledger, ref)
+        if best is not None:
+            found.append(best)
+        if config.KEEP_GEN and prior is not None and prior != best:
+            found.append(prior)
     best = None if not found else found[0] if len(found) == 1 else _panel(witness, renderer, ledger, ref, found)
-    return final(best) if best is not None else None
+    return _finalize(renderer, image, best) if best is not None else None

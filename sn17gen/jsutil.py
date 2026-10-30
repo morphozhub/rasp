@@ -60,3 +60,9 @@ FLAT = ("  pivot.updateMatrixWorld(true);\n"
 def final(js: str) -> str | None:
     out = wrap(js)
     return None if out is None else out.replace("  pivot.rotation.set(0, 0, 0);\n", FLAT, 1)
+
+
+def tilted(js: str, degrees: float) -> str | None:
+    """Wrap with a fixed tilt about X (degrees) instead of the height-ratio heuristic."""
+    rx = "0" if degrees == 0 else f"{degrees / 180.0:.6f} * Math.PI"
+    return wrap(js, rx=rx)
